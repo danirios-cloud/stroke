@@ -1,0 +1,1254 @@
+---
+author: "Daniela Rios"
+output:
+  html_document:
+    mathjax: true
+    keep_md: true
+    highlight: zenburn
+    theme:  spacelab
+  pdf_document:
+always_allow_html: true
+---
+
+
+```{r setup, echo=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, comment = NA)
+```
+
+![](stroke_1.jpg){width=900 height=200px}
+
+
+<div id="table-of-contents" style="
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+
+<h2 style="
+    text-align: center;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #2a7ae2;
+    font-weight: bold;
+    color: #2a7ae2;">
+    Table of Contents
+</h2>
+
+<p style="font-size: 14px; color: #555;">
+    Exploratory analysis of the Iris dataset to assess the structure, distribution, and normality of its features.
+</p>
+
+<ol style="font-size: 14px; color: #555;">
+    <li><a href="#introduction" style="text-decoration: none; color: #2a7ae2;">Introduction</a></li>
+    <li><a href="#exploration-and-summary" style="text-decoration: none; color: #2a7ae2;">Exploration and Summary of the Dataset</a></li>
+    <li>
+        <a href="#data-visualization" style="text-decoration: none; color: #2a7ae2;">Data Visualization</a>
+        <ul style="list-style-type: disc; padding-left: 40px; margin-top: 10px; line-height: 1.5;">
+            <li style="font-size: 13px;"><a href="#histograms" style="text-decoration: none; color: #2a7ae2;">Histograms</a></li>
+            <li style="font-size: 13px;"><a href="#box-plots" style="text-decoration: none; color: #2a7ae2;">Box plots</a></li>
+            <li style="font-size: 13px;"><a href="#scatter-plots" style="text-decoration: none; color: #2a7ae2;">Scatter plot</a></li>
+        </ul>
+    </li>
+    <li><a href="#shapiro-wilk" style="text-decoration: none; color: #2a7ae2;">Shapiro-Wilk Normality Test</a></li>
+    <li> <a href="#density" style="text-decoration: none; color: #2a7ae2;">Density Function Plot</a> </li>
+    <li><a href="#standardize" style="text-decoration: none; color: #2a7ae2;">Standard Z-score Normalization</a></li>
+    <li><a href="#probability" style="text-decoration: none; color: #2a7ae2;">Calculate the probability that sepal length is greater than 1 for the species 'setosa'</a></li>
+</ol>
+
+</div>
+
+****
+
+<a id="dataset_overview"></a>
+
+<b><span style='color:#E888BB; font-size: 16px;'> 1 |</span> <span style='color:#000;'>Dataset Overview</span> </b>
+
+<p style='color:#000;'>This dataset is intended to predict whether a patient is likely to suffer from a stroke based on several input parameters. These parameters include demographic information (such as age, gender, and marital status), medical history (including hypertension, heart disease), lifestyle factors (smoking status, work type), and physiological measurements (BMI, average glucose level).</p>
+
+<p style='color:#000;'>Each row in the dataset represents a single patient and provides a snapshot of relevant details that can help predict the likelihood of experiencing a stroke. The goal is to use these features to train machine learning models that can identify patterns and make predictions about stroke occurrence.</p>
+
+<p style='color:#000;'>Below is a detailed description of the available variables in the dataset, outlining each attribute and its corresponding meaning:</p>
+
+<div style="color:white;display:fill;border-radius:8px;font-size:100%; letter-spacing:1.0px;">
+  <p style="padding: 5px;color:white;text-align:center;">
+    <b><span style='color:#E888BB'>Dataset Attribute Information</span></b>
+  </p>
+</div>
+
+<style>
+table {
+  width: 100%; /* Ajuste del ancho de la tabla */
+  max-width: 1200px; /* Máximo ancho */
+  border-collapse: collapse;
+  margin-left: auto; 
+  margin-right: auto;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left; /* Justificar texto a la izquierda */
+}
+
+th {
+  background-color: #fae0e4;
+  color: black;
+  text-align: center;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+</style>
+
+| Attribute             | Description                                                                                       |
+|-----------------------|---------------------------------------------------------------------------------------------------|
+| **id**                | Unique identifier for each patient                                                                |
+| **gender**            | "Male", "Female" or "Other"                                                                        |
+| **age**               | Age of the patient in years                                                                        |
+| **hypertension**      | 0 if the patient doesn't have hypertension, 1 if the patient has hypertension                      |
+| **heart_disease**     | 0 if the patient doesn't have any heart diseases, 1 if the patient has a heart disease             |
+| **ever_married**      | "No" or "Yes", indicating marital status                                                           |
+| **work_type**         | Type of employment: "children", "Govt_job", "Never_worked", "Private", "Self-employed"             |
+| **Residence_type**    | "Rural" or "Urban", indicating the residence type                                                  |
+| **avg_glucose_level** | Average glucose level in the blood                                                                 |
+| **bmi**               | Body mass index (BMI)                                                                             |
+| **smoking_status**    | Smoking status: "formerly smoked", "never smoked", "smokes", or "Unknown"                         |
+| **stroke**            | 1 if the patient had a stroke, 0 if not (target variable)                                          |
+
+<p style='color:#000;'>The dataset was retrieved from Kaggle and is intended for educational and research purposes. The information is publicly available <a href="https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset" target="_blank" style="color:#0000EE;">here</a>.</p>
+
+<a id="eda"></a>
+
+<b><span style='color:#E888BB; font-size: 16px;'> 2 |</span> <span style='color:#000;'>Exploratory Data Analysis (EDA)</span> </b>
+
+<p style='color:#000;'>Exploratory Data Analysis (EDA) is a crucial step in any data science project, especially when applying machine learning and deep learning algorithms. EDA involves a thorough examination of the dataset to understand its structure, detect patterns, identify outliers, and handle missing values. This step ensures that the data is clean and ready for modeling, as high-quality data is essential for building robust and accurate models.</p>
+
+<p style='color:#000;'>In the context of machine learning and deep learning, EDA helps practitioners gain insights into the dataset, allowing them to choose the right algorithms and preprocess the data effectively. A well-conducted EDA can reveal relationships between variables, which can be leveraged by machine learning models to make more accurate predictions. Additionally, by identifying anomalies or imbalances in the dataset, EDA aids in improving the model's performance, ensuring that it generalizes well to new, unseen data.</p>
+
+<div style="background-color: #f4f4f8; margin: 10px 0; padding: 15px; border-left: 5px solid #9381ff; border-radius: 5px;">
+  <p style="color: #000;">
+    For this analysis, an <strong>iterative EDA approach</strong> will be used, involving two versions of the dataset: an original and a transformed version. The original dataset will remain unchanged, while the transformed version will be updated step-by-step to handle issues like missing values or outliers. This approach allows for <strong>transparent comparisons</strong> at each stage, ensuring that transformations do not unintentionally bias the data or alter key insights.
+  </p>
+</div>
+
+<a id="eda_load_data"></a>
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**2.1 Loading Libraries and Data**</span>
+
+<p style='color:#000;'>The first step in this analysis is to load the necessary libraries and import the dataset. This will allow us to begin exploring the data structure and gain an initial understanding of its contents.</p>
+
+```{r}
+# Load necessary libraries
+library(ggplot2)    # For data visualization
+library(dplyr)      # For data manipulation
+library(knitr)      # For displaying tables
+library(kableExtra) # For enhancing table formatting
+
+# Load the dataset
+stroke_data <- read.csv("stroke.csv")
+
+# Display the first 8 rows of the dataset in a table format
+kable(head(stroke_data, 8), "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r}
+# Get the number of rows and columns
+num_observations <- nrow(stroke_data)
+num_columns <- ncol(stroke_data)
+
+# Display the number of observations and columns
+cat("The dataset contains a total of", num_observations, "observations and", num_columns, "columns.\n")
+```
+<a id="eda_data_types"></a>
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**2.2 Data Cleaning**</span>
+
+<p style='color:#000;'>In any data analysis process, it is essential to ensure that each column in the dataset has the correct data type before beginning any kind of modeling or deep analysis. Incorrect data types, especially in categorical or numerical variables, can lead to errors or incorrect model predictions. For this reason, the first step in this process is to review the current data types of the variables.</p>
+
+<p style='color:#000;'>While the `str()` function in R can be used to quickly inspect the structure of the dataset, providing details on the data types of each column, its output can sometimes be less visually appealing and harder to interpret at a glance. Therefore, to enhance readability and make the presentation more user-friendly, the data types are summarized here in an organized table format. This approach helps convey the information more clearly, especially for those who prefer a structured overview of the dataset.</p>
+
+<div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Reviewing and Transforming Data Types**</span></div>
+
+```{r}
+# Create a summary of the current data structure for better visualization
+current_data_structure <- data.frame(
+  Column = c("id", "gender", "age", "hypertension", "heart_disease", "ever_married", 
+             "work_type", "Residence_type", "avg_glucose_level", "bmi", "smoking_status", "stroke"),
+  Current_Type = c("Integer", "Character", "Numeric", "Integer", "Integer", "Character", 
+                   "Character", "Character", "Numeric", "Character", "Character", "Integer")
+)
+
+# Print the summary table of current data structure
+kable(current_data_structure, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Current Data Structure" = 1))
+
+# Apply data type transformations based on the data dictionary
+
+# Convert 'id' to factor as it represents a unique identifier
+stroke_data$id <- as.factor(stroke_data$id)
+
+# Convert 'gender', 'ever_married', 'work_type', 'Residence_type', 'smoking_status', 'stroke' to factors
+stroke_data$gender <- as.factor(stroke_data$gender)
+stroke_data$ever_married <- as.factor(stroke_data$ever_married)
+stroke_data$work_type <- as.factor(stroke_data$work_type)
+stroke_data$Residence_type <- as.factor(stroke_data$Residence_type)
+stroke_data$smoking_status <- as.factor(stroke_data$smoking_status)
+stroke_data$stroke <- as.factor(stroke_data$stroke)
+
+# Convert 'hypertension' and 'heart_disease' to factors since they represent categorical data (0/1)
+stroke_data$hypertension <- as.factor(stroke_data$hypertension)
+stroke_data$heart_disease <- as.factor(stroke_data$heart_disease)
+
+# Ensure 'age', 'avg_glucose_level', and 'bmi' are numeric values
+stroke_data$age <- as.numeric(stroke_data$age)
+stroke_data$avg_glucose_level <- as.numeric(stroke_data$avg_glucose_level)
+stroke_data$bmi <- as.numeric(stroke_data$bmi)
+
+# After transformation, generate a summary of the new data types
+transformed_data_structure <- data.frame(
+  Column = c("id", "gender", "age", "hypertension", "heart_disease", "ever_married", 
+             "work_type", "Residence_type", "avg_glucose_level", "bmi", "smoking_status", "stroke"),
+  New_Type = c("Factor", "Factor", "Numeric", "Factor", "Factor", "Factor", 
+               "Factor", "Factor", "Numeric", "Numeric", "Factor", "Factor")
+)
+
+# Print the summary table of transformed data structure
+kable(transformed_data_structure, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Transformed Data Structure" = 1))
+```
+
+<p style='color:#000;'>With these transformations applied, the dataset is now structured for further exploration and analysis. Categorical variables have been correctly converted into factors, while numerical variables have been verified for correct data types.</p>
+
+<div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Categorical and Numerical Variables**</span></div>
+
+<p style='color:#000;'>After transforming the data types, it is crucial to categorize the variables into categorical and numerical types. This division is important to guide the selection of models and techniques during analysis. The following tables show the resulting variables divided into their respective categories:</p> <div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Categorical Variables**</span></div>
+
+```{r}
+# Create a summary table for categorical variables
+categorical_vars <- data.frame(
+  Attribute = c("id", "gender", "hypertension", "heart_disease", "ever_married", 
+                "work_type", "Residence_type", "smoking_status", "stroke"),
+  Data_Type = c("Factor", "Factor", "Factor", "Factor", "Factor", 
+                "Factor", "Factor", "Factor", "Factor"),
+  Description = c("Unique identifier", "Gender ('Male', 'Female', 'Other')", 
+                  "0 = No hypertension, 1 = Hypertension", 
+                  "0 = No heart disease, 1 = Heart disease", 
+                  "'Yes' or 'No' indicating marital status", 
+                  "Type of work ('Private', 'Self-employed', etc.)", 
+                  "'Urban' or 'Rural' residence type", 
+                  "'Smoked', 'Never smoked', 'Unknown'", 
+                  "1 = Had stroke, 0 = Did not have stroke")
+)
+
+# Print the summary table for categorical variables
+kable(categorical_vars, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Categorical Variables" = 2))
+```
+
+<div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Numerical Variables**</span></div>
+
+```{r}
+# Create a summary table for numerical variables
+numerical_vars <- data.frame(
+  Attribute = c("age", "avg_glucose_level", "bmi"),
+  Data_Type = c("Numeric", "Numeric", "Numeric"),
+  Description = c("Patient's age in years", "Average glucose level", 
+                  "Body mass index (BMI)")
+)
+
+# Print the summary table for numerical variables
+kable(numerical_vars, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Numerical Variables" = 2))
+```
+
+<p style='color:#000;'>By dividing the variables into categorical and numerical types, it becomes easier to determine the appropriate models to use in the analysis. For example, classification models are typically used for categorical target variables, while regression models are used for numerical targets. In addition, this division also guides the application of preprocessing techniques such as encoding categorical variables or scaling numerical ones.</p>
+
+<div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Identifying Missing Values**</div>
+
+<p style='color:#000;'>Missing data is a common issue in many datasets and can significantly affect the outcome of data analysis and modeling. Handling missing data appropriately is crucial to avoid biases and inaccuracies in results. In this section, we will perform an analysis to identify which columns contain missing values, the count of missing values in each column, and their corresponding percentage of the total dataset. This information will guide us in determining appropriate strategies to handle missing data.</p>
+
+<p style='color:#000;'>Identifying missing values is an essential step in the data analysis process for several reasons:</p> <ul style='color:#000;'> <li><b>Impact on Analysis:</b> Missing values can affect summary statistics, which can skew the results of any data analysis or modeling. For example, mean and variance calculations are directly influenced by the presence of missing values.</li> <li><b>Model Accuracy:</b> Machine learning models require complete data for training, and the presence of missing values can lead to errors during training or reduce accuracy if not properly handled. Identifying these values ensures that imputation or other strategies can be applied to maintain model performance.</li> <li><b>Guiding Imputation Strategies:</b> Knowing the extent and pattern of missing values helps to determine the most appropriate handling methods. For example, columns with few missing values might be imputed using simple strategies (like the median), whereas those with a higher proportion might need more sophisticated techniques or even exclusion from the analysis.</li> </ul> <p style='color:#000;'>By correctly identifying and managing missing values, we ensure that the dataset is well-prepared for subsequent analysis and modeling stages, leading to more reliable results. Missing data can arise for a variety of reasons, including errors in data collection, entry issues, or data being unavailable at the time of collection.</p>
+
+##### **Unique Values in Categorical Variables**
+
+<p style='color:#000;'>Before identifying missing values, it is crucial to assess the unique values of categorical columns to identify any values that might represent missing or placeholder data. Common placeholders include values such as "UNKNOWN", "N/A", or other representations of incomplete information. In this dataset, it was found that the "Unknown" value in the **smoking_status** column represents unavailable information. However, instead of treating it as missing, it will be retained as a unique category to ensure the model can learn from such patterns. Identifying these values helps determine if they should be treated as missing data during preprocessing, ensuring the accuracy of our future analysis.</p> <div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Summarizing Unique Values in Categorical Columns**</div>
+
+```{r}
+# Load necessary library
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+
+# Define the categorical columns
+categorical_columns <- c("gender", "hypertension", "heart_disease", "ever_married", 
+                         "work_type", "Residence_type", "smoking_status", "stroke")
+
+# Create a summary table for unique values in categorical variables
+unique_values_summary <- lapply(categorical_columns, function(col) {
+  data.frame(
+    Column = col,
+    Unique_Values = paste(unique(stroke_data[[col]]), collapse = ", ")
+  )
+}) %>% bind_rows()
+
+# Display the summary of unique values in categorical variables
+kable(unique_values_summary, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Unique Values in Categorical Columns" = 1))
+
+```
+
+<p style='color:#000;'>Upon examining the unique values, it was determined that "Unknown" in the **smoking_status** column represents unavailable data. However, instead of converting it to `NA`, it will be retained as a separate category. This allows the machine learning models to learn from the absence of smoking status, which might be significant information in itself. Such placeholder values are retained to maintain dataset completeness and avoid information loss.</p> <div style="background-color:#b2f7ef; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Handling Missing Values**</div>
+
+```{r}
+# Load necessary library for handling data
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+
+# Summarize missing values by column using pivot_longer()
+missing_summary <- stroke_data %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(cols = everything(), names_to = "Column", values_to = "Missing_Count") %>%
+  mutate(Total_Observations = nrow(stroke_data),
+         Missing_Percentage = paste0(round((Missing_Count / Total_Observations) * 100, 1), "%"))
+
+# Display the summary of missing values
+kable(missing_summary, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Summary of Missing Values" = 3))
+```
+
+<div style="background-color: #f4f4f8; margin: 10px 0; padding: 15px; border-left: 5px solid #9381ff; border-radius: 5px;"> <p style="color: #000;"> Since this point forward, the analysis will involve modifying the dataset to address issues like missing values and outliers. To ensure transparency and maintain the ability to compare the changes step by step, we will create a duplicate of the dataset. The original version, named <strong>stroke_data_original</strong>, will remain unchanged, while a <strong>transformed version</strong> will be used for all subsequent data preprocessing steps. This iterative approach allows for <strong>transparent comparisons</strong> and ensures that any transformations do not inadvertently introduce bias or alter the key characteristics of the data. </p> </div>
+
+```{r}
+# Creating a duplicate of the original dataset for comparison
+stroke_data_original <- stroke_data  # Original dataset remains unchanged
+stroke_data_transformed <- stroke_data  # This copy will be transformed
+```
+
+<p style='color:#000;'>In this analysis, various strategies were considered for handling the missing values in the <b>bmi</b> column. Given that <b>bmi</b> is a numerical variable, multiple approaches are viable:</p>
+<ul style='color:#000;'>
+  <li><b>Imputation with Mean/Median:</b> Given that <b>bmi</b> is a numerical variable, one common approach is to fill in missing values with the mean or median of the column. Since the <b>bmi</b> values are continuous and may have some skew, using the median might be preferable, as it reduces the influence of any extreme values (outliers).</li>
+  <li><b>Imputation with Predictive Models:</b> Alternatively, missing <b>bmi</b> values could be predicted using other features in the dataset by applying a simple regression model or even more sophisticated models like K-Nearest Neighbors (KNN). This approach considers the relationship between <b>bmi</b> and other patient attributes, potentially leading to a more accurate estimation.</li>
+  <li><b>Creating a "Missing" Indicator:</b> Another approach could be to create a new binary feature that indicates whether a <b>bmi</b> value is missing. This can help the model learn whether the absence of the value has some significance in the context of predicting stroke risk.</li>
+  <li><b>Removal of Missing Data:</b> Since only 3.9% of the <b>bmi</b> values are missing, it might also be feasible to remove those rows entirely. This approach is less preferable if every observation is important, but for a smaller percentage of missing values, it can simplify the dataset.</li>
+</ul>
+<p style='color:#000;'>After careful consideration, the <b>median imputation</b> was chosen for this analysis. The median is less sensitive to outliers compared to the mean, making it a more robust choice for imputation, especially in health-related metrics like BMI, where extreme values can often occur. Additionally, using the median keeps the imputation process simple and efficient, which is crucial for maintaining consistency while minimizing preprocessing complexity.</p>
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Calculate and print the median of 'bmi'
+median_bmi <- median(stroke_data_transformed$bmi, na.rm = TRUE)  # Calculate the median, ignoring NA values
+cat("The median of the 'bmi' column used for imputation is:", median_bmi, "\n")  # Print the median
+
+# Impute missing values in the 'bmi' column using the median
+stroke_data_transformed$bmi[is.na(stroke_data_transformed$bmi)] <- median_bmi  # Replace NA values with median
+
+# Summarize the updated dataset to verify imputation
+missing_summary_transformed <- stroke_data_transformed %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(cols = everything(), names_to = "Column", values_to = "Missing_Count") %>%
+  mutate(Total_Observations = nrow(stroke_data_transformed),
+         Missing_Percentage = paste0(round((Missing_Count / Total_Observations) * 100, 1), "%"))
+
+# Display the summary of missing values after imputation
+kable(missing_summary_transformed, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Summary of Missing Values After Imputation" = 3))
+
+# Generate statistics of the original data and the transformed data
+original_bmi_stats <- stroke_data %>%
+  summarise(
+    Min_BMI = min(bmi, na.rm = TRUE),
+    Median_BMI = median(bmi, na.rm = TRUE),
+    Mean_BMI = mean(bmi, na.rm = TRUE),
+    Max_BMI = max(bmi, na.rm = TRUE),
+    SD_BMI = sd(bmi, na.rm = TRUE)
+  )
+
+transformed_bmi_stats <- stroke_data_transformed %>%
+  summarise(
+    Min_BMI = min(bmi),
+    Median_BMI = median(bmi),
+    Mean_BMI = mean(bmi),
+    Max_BMI = max(bmi),
+    SD_BMI = sd(bmi)
+  )
+
+# Combine statistics for comparison
+comparison_stats <- bind_rows(
+  original_bmi_stats %>% mutate(Dataset = "Original"),
+  transformed_bmi_stats %>% mutate(Dataset = "Transformed")
+) %>%
+  select(Dataset, everything())  # Move 'Dataset' to the first column
+
+# Display the comparison statistics
+kable(comparison_stats, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "BMI Statistics Comparison" = 5)) %>%
+  column_spec(1, bold = TRUE)
+
+```
+<p style='color:#000;'>The table above provides a comparison of BMI statistics between the original and transformed datasets, highlighting the impact of the median imputation process. The original dataset had missing values in the **bmi** column, which have now been replaced by the median value of **28.1**. As a result, the **median** in both datasets remains unchanged, demonstrating that the imputation did not alter the central tendency of the data. However, a slight reduction in the **mean BMI** and **standard deviation (SD)** can be observed in the transformed dataset. The mean BMI decreased from **28.89** to **28.86**, and the standard deviation decreased from **7.85** to **7.70**. This reduction in standard deviation is expected, as imputation using the median reduces the impact of variability caused by missing values. By using median imputation, the transformed dataset maintains a more robust representation of BMI values, especially in the presence of outliers, while ensuring the dataset remains complete and ready for further analysis.</p>
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**2.3 Univariate Analysis**</span>
+
+<p style='color:#000;'>**Univariate Analysis** focuses on examining each variable individually to understand its characteristics and gain insight into its distribution, central tendency, and variability. This type of analysis is crucial for gaining a comprehensive understanding of each feature, identifying patterns, detecting anomalies, and guiding further analysis steps. Here, we start by exploring the numerical variables in the dataset, as they often contain critical information that can influence downstream modeling and decision-making processes.</p>
+
+<div style="background-color:#b2f7ef; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Numerical Columns**</div>
+
+<p style='color:#000;'>In this section, we focus on analyzing the numerical variables present in the dataset. Each variable is evaluated in terms of its distribution, spread, and presence of outliers. To achieve a deeper understanding, we utilize various visualization techniques such as density distribution charts, violin plots, and boxplots, which help uncover key aspects of the data.</p> 
+
+</p> <div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Introduction to Distribution Analysis**</div>
+
+<p style='color:#000;'>To begin understanding the distributions, we use density distribution charts for each numerical variable. These charts illustrate the probability density, allowing us to identify where the data points are concentrated, as well as to detect the presence of multimodal distributions or skewness. Density plots provide a smooth representation of the underlying frequency of data values, which helps in understanding the data patterns better. Below, we present the density distribution charts for both the original and transformed versions of the dataset, offering a comparative view of how the data changed post-transformation.</p>
+
+
+```{r}
+# Load necessary libraries for visualization
+library(ggplot2)
+library(plotly)
+library(RColorBrewer)
+library(tidyr)
+
+# Numerical columns for comparison
+numerical_columns <- c("age", "avg_glucose_level", "bmi")
+
+# Combine original and transformed datasets, and add Dataset labels
+stroke_data_original$Dataset <- "Original"
+stroke_data_transformed$Dataset <- "Transformed"
+combined_data <- bind_rows(
+  stroke_data_original %>% select(all_of(numerical_columns), Dataset),
+  stroke_data_transformed %>% select(all_of(numerical_columns), Dataset)
+)
+
+# Replace labels for better readability
+combined_data <- combined_data %>%
+  pivot_longer(cols = -Dataset, names_to = "Variable", values_to = "Value") %>%
+  mutate(Variable = recode(Variable,
+                           "age" = "Age",
+                           "avg_glucose_level" = "Avg Glucose Level",
+                           "bmi" = "BMI"))
+
+# Define the colors using the Set1 palette
+colors <- brewer.pal(n = 2, name = "Set1")
+names(colors) <- c("Original", "Transformed")
+
+# Create a density plot for visualizing the distributions
+density_plots <- ggplot(combined_data, aes(x = Value, fill = Dataset)) +
+  geom_density(alpha = 0.7) +
+  facet_grid(Variable ~ Dataset, scales = "free") +
+  scale_fill_manual(values = colors) +
+  theme_minimal() +
+  theme(
+    strip.background = element_rect(fill = "lightblue", colour = "deepskyblue", size = 1),
+    strip.text.x = element_text(size = 10, color = "navy", face = "plain"),
+    strip.text.y = element_text(size = 10, color = "navy", face = "plain"),
+    plot.title = element_text(size = 12, face = "plain", hjust = 0.5, margin = margin(t = 10, b = 10)),
+    axis.text = element_text(size = 8),
+    axis.title.y = element_text(size = 10, face = "plain", vjust = 2, angle = 90),
+    legend.position = "none",
+    plot.margin = margin(10, 10, 10, 10),
+    panel.border = element_blank()  
+  ) +
+  labs(title = "Density Distributions of Numerical Variables: Original vs Transformed",
+       x = NULL,
+       y = "Density") +
+  scale_y_continuous(labels = scales::label_number(scale = 1, accuracy = 0.01))
+
+# Convert to an interactive plotly object
+interactive_plot <- ggplotly(density_plots)
+
+# Display the interactive plot
+interactive_plot
+```
+
+<p style='color:#000;'>The **Density Distribution Charts** presented above show the comparison between the original and transformed datasets for each numerical variable. Since the primary change made to the dataset was a median imputation of the **BMI** variable to handle missing values, the distribution of the **BMI** variable is where we expect to see notable differences. In the transformed version of the **BMI** variable, there is a visible smoothing effect where missing values have been filled with the median, slightly reducing the distribution's spread. The distributions for **Age** and **Average Glucose Level** remain unchanged, as no transformations were applied to these variables at this stage. Moving forward, we will revisit these density charts after applying further transformations to make visible how the distributions evolve throughout the data preparation process. This iterative comparison helps ensure we understand the impact of each transformation step.</p>
+
+</p> <div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Boxplot Analysis**</div>
+
+<p style='color:#000;'>Boxplots are an essential tool for visualizing the spread and identifying the presence of outliers within the data. Each boxplot represents the minimum, first quartile (Q1), median, third quartile (Q3), and maximum values, as well as any potential outliers beyond the whiskers, which are typically calculated as 1.5 times the interquartile range (IQR). Boxplots offer a clear view of the data distribution, highlighting aspects such as symmetry, skewness, and the existence of extreme values.</p>
+
+```{r}
+# Load necessary libraries for boxplot visualization
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(gridExtra)
+library(plotly)
+
+# Create a new dataframe that combines both original and transformed data for boxplot visualization
+stroke_data_original$Dataset <- "Original"
+stroke_data_transformed$Dataset <- "Transformed"
+
+# Select only numerical columns and the Dataset label for boxplots
+combined_data <- bind_rows(
+  stroke_data_original %>% select(all_of(numerical_columns), Dataset),
+  stroke_data_transformed %>% select(all_of(numerical_columns), Dataset)
+)
+
+# Reshape data to long format for ggplot2
+df_long <- combined_data %>%
+  pivot_longer(cols = -Dataset, names_to = "Variable", values_to = "Value")
+
+# Replace labels for better readability
+df_long$Variable <- recode(df_long$Variable, 
+                           "age" = "Age", 
+                           "avg_glucose_level" = "Avg Glucose Level", 
+                           "bmi" = "BMI")
+
+# Plot the boxplots in one chart with facets for each variable
+boxplot_chart <- ggplot(data = df_long, aes(x = Dataset, y = Value, fill = Dataset)) +
+  geom_boxplot(alpha = 0.6, outlier.color = "red", outlier.size = 1) +
+  facet_wrap(~ Variable, scales = "free") +
+  theme_minimal() +
+  labs(
+    title = "Boxplots of Numerical Variables: Original vs Transformed"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12, face = "bold"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_text(size = 14, face = "bold"),
+    legend.position = "none"
+  ) +
+  scale_fill_manual(values = c("Original" = "#FF9999", "Transformed" = "#66B2FF"))
+
+# Convert the ggplot to an interactive plotly chart
+interactive_boxplot <- ggplotly(boxplot_chart, width = 900, height = 500)
+
+# Display the interactive boxplot
+interactive_boxplot
+
+```
+
+<p style='color:#000;'>The boxplots for the original and transformed datasets are shown below for each numerical feature. These visualizations provide a straightforward comparison to identify any changes due to the transformation process:</p>
+
+- **Age**: The transformation does not introduce noticeable changes in the distribution of **Age**. The spread of values remains largely consistent between the original and transformed datasets, suggesting minimal or no transformation was applied to this feature.
+  
+- **Avg Glucose Level**: The **Avg Glucose Level** appears to have a consistent distribution between the original and transformed datasets, with a large number of outliers detected in both cases. This indicates that no specific transformation was applied to handle these outliers.
+
+- **BMI**: The **BMI** feature shows some differences between the original and transformed versions. After applying median imputation for missing values, the spread and outliers remain relatively similar. However, the transformation aims to fill in gaps rather than alter the distribution significantly. This ensures that the feature remains stable while ensuring completeness for downstream analysis.
+
+<p style='color:#000;'>As we progress through further transformations, we will revisit these boxplots to assess how the distributions continue to evolve, especially regarding outlier management and feature scaling. These comparisons will help us understand the impact of the applied transformations on the overall data quality and consistency.</p>
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Function to identify outliers using the 1.5 * IQR rule
+identify_outliers <- function(x) {
+  q1 <- quantile(x, 0.25, na.rm = TRUE)
+  q3 <- quantile(x, 0.75, na.rm = TRUE)
+  iqr <- q3 - q1
+  lower_bound <- q1 - 1.5 * iqr
+  upper_bound <- q3 + 1.5 * iqr
+  return(x < lower_bound | x > upper_bound)
+}
+
+# Create a summary of outliers in numerical columns for both Original and Transformed datasets
+outlier_summary <- numerical_columns %>%
+  lapply(function(col) {
+    original_outliers <- identify_outliers(stroke_data_original[[col]])
+    transformed_outliers <- identify_outliers(stroke_data_transformed[[col]])
+    
+    data.frame(
+      Dataset = rep(c("Original", "Transformed"), each = 1),
+      Column = col,
+      Outlier_Count = c(
+        sum(original_outliers, na.rm = TRUE),
+        sum(transformed_outliers, na.rm = TRUE)
+      ),
+      Total_Observations = length(stroke_data_transformed[[col]]),
+      Outlier_Percentage = c(
+        paste0(round((sum(original_outliers, na.rm = TRUE) / length(stroke_data_original[[col]])) * 100, 2), "%"),
+        paste0(round((sum(transformed_outliers, na.rm = TRUE) / length(stroke_data_transformed[[col]])) * 100, 2), "%")
+      )
+    )
+  }) %>% bind_rows()
+
+# Display the summary of outliers
+kable(outlier_summary, "html") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  add_header_above(c(" " = 1, "Summary of Outliers" = 4))
+
+```
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Outlier Detection Using Advanced Methods**</span>
+
+<p style='color:#000;'>After analyzing outliers visually through **boxplots**, it’s important to leverage more advanced and algorithmic techniques to validate and further refine our understanding of these anomalies. Different algorithms have distinct approaches to detecting outliers, which can provide complementary insights and help build a more complete understanding of data irregularities. Here, we use three methods for outlier detection: **K-Nearest Neighbors (KNN)**, **Isolation Forest**, and **Local Outlier Factor (LOF)**. Each approach has its own strengths and assumptions, making them useful for identifying different types of outliers in the dataset.</p> <p style='color:#000;'>It is also important to note that there are even more advanced techniques available, such as **Autoencoders for anomaly detection** and **One-Class SVM**, which can be highly effective for specialized datasets or specific use cases. However, for this analysis, we focus on KNN, Isolation Forest, and LOF, as they are well-established, interpretable, and suitable for our data characteristics.</p> <p style='color:#000;'>Before applying these algorithms, it's essential to prepare the dataset correctly. Outlier detection methods like KNN and LOF rely on distance-based measures, while Isolation Forest uses a tree-based method to separate observations. To ensure all features contribute proportionately, we normalize the dataset using **min-max scaling**. This is necessary because variations in the magnitude of the features could bias distance-based calculations, leading to inaccurate results.</p>
+
+<div style="background-color:#b2f7ef; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Preprocessing Requirements for Outlier Detection Algorithms**</div> <p style='color:#000;'>To achieve accurate and unbiased outlier detection results, it is crucial that the data meet certain requirements: <ul> <li>**Normalization**: The data must be normalized or standardized, especially for KNN and LOF, as they are distance-based methods and sensitive to feature scales.</li> <li>**Handling Missing Values**: Any missing values must be handled prior to applying the algorithms. For this dataset, we have already handled missing values through median imputation.</li> <li>**Numerical Features Only**: These algorithms operate effectively with numerical data, so categorical features are excluded for this analysis.</li> </ul> Below, we preprocess the dataset accordingly to meet these requirements and prepare it for subsequent outlier detection methods.</p>
+
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(caret)
+library(knitr)
+library(kableExtra)
+
+# Step 1: Creating a Preprocessed Dataset for Outlier Detection Models
+# Numerical columns (we will focus on numerical features for outlier detection)
+numerical_columns <- c("age", "avg_glucose_level", "bmi")
+
+# Select only numerical columns for preprocessing and outlier detection
+stroke_data_preprocessed <- stroke_data_transformed %>%
+  select(all_of(numerical_columns))
+
+# Step 2: Scaling the Data (Standardization)
+# We will use the scale() function to standardize the numerical features
+scaled_data <- as.data.frame(scale(stroke_data_preprocessed))
+
+# Display a summary of the scaled data
+summary_scaled <- scaled_data %>%
+  summarise(across(everything(), list(min = ~min(.), median = ~median(.), max = ~max(.), mean = ~mean(.), sd = ~sd(.))))
+
+# Adjust the number of columns in the header to match the number of columns in summary_scaled
+num_cols <- ncol(summary_scaled)
+
+# Step 3: Preparing Separate Datasets for Each Outlier Detection Model
+# We'll keep the scaled dataset consistent for all three models
+
+# 3.1: KNN Outlier Detection Preparation
+knn_data <- scaled_data
+
+# 3.2: Local Outlier Factor (LOF) Preparation
+lof_data <- scaled_data
+
+# 3.3: Isolation Forest Preparation
+isolation_forest_data <- scaled_data
+
+# Display a message to indicate the data is ready for model training
+cat("The datasets for KNN, LOF, and Isolation Forest have been preprocessed and are ready for training.\n")
+
+```
+
+<div style="background-color:#fdf8e1; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**K-Nearest Neighbors (KNN) Outlier Detection**</div> <p style='color:#000;'>Distance-based approach that detects outliers by comparing the distances between points and their nearest neighbors. Observations with a significantly larger average distance to their neighbors are flagged as outliers. In this case, we use KNN with **k = 5** to identify data points that differ substantially from others.</p>
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Determining the Optimal K for KNN**</span>
+
+<p style='color:#000;'>We use the **Elbow method** to find the optimal number of neighbors (**K**) by calculating the average distance to the K nearest neighbors. The plot below shows the average distance for different values of **K**, where the optimal **K** is the point at which the rate of reduction in average distance starts to slow significantly (the "elbow" point). The optimal value of **K** will be determined interactively.</p>
+
+```{r}
+# Load necessary libraries
+library(plotly)
+library(dplyr)
+
+# Function to calculate the average distance for different values of K
+calculate_average_distance <- function(data, max_k) {
+  avg_distances <- numeric(max_k)
+  
+  # Calculate the distance matrix
+  distance_matrix <- as.matrix(dist(data))
+  
+  for (k in 1:max_k) {
+    knn_distances <- apply(distance_matrix, 1, function(row) {
+      sorted_distances <- sort(row)
+      mean(sorted_distances[2:(k + 1)])  # Take k nearest neighbors (excluding the point itself)
+    })
+    avg_distances[k] <- mean(knn_distances)
+  }
+  
+  avg_distances
+}
+
+# Determine optimal K using the Elbow method
+set.seed(123)  # For reproducibility
+max_k <- 10
+avg_distances <- calculate_average_distance(scaled_data, max_k)
+
+# Plot the Elbow Method to find the optimal value for K (using plotly for interactivity)
+elbow_plot <- plot_ly(x = 1:max_k, y = avg_distances, type = 'scatter', mode = 'lines+markers',
+                      line = list(color = 'blue'), marker = list(size = 8)) %>%
+  layout(
+    title = 'Elbow Method for Optimal K in KNN',
+    xaxis = list(title = 'Number of Neighbors (K)'),
+    yaxis = list(title = 'Average Distance'),
+    showlegend = FALSE
+  )
+
+# Display the interactive elbow plot
+elbow_plot
+```
+```{r}
+# Create a data frame to summarize the values of K and average distances
+elbow_summary <- data.frame(
+  K = 1:max_k,
+  Avg_Distance = avg_distances
+)
+
+# Calculate the rate of change (difference between successive average distances)
+elbow_summary <- elbow_summary %>%
+  mutate(
+    Rate_of_Change = c(NA, diff(Avg_Distance)),  # Difference in average distance between successive Ks
+    Reduction_in_Gain = c(NA, diff(Rate_of_Change))  # Change in rate of reduction
+  )
+
+# Display the table using knitr and kableExtra
+kable(elbow_summary, "html", caption = "Elbow Summary: Average Distance and Rate of Change for Different K Values") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  column_spec(1, bold = TRUE)
+
+```
+
+```{r}
+# Identify the optimal value of K using the Elbow method
+# Calculate the rate of change (first derivative) of average distances
+rate_of_change <- diff(avg_distances)
+
+# Calculate the difference of the rate of change to identify the "elbow"
+second_derivative <- diff(rate_of_change)
+
+# The optimal K is found by looking for the first local minimum (flattening point)
+optimal_k <- which(second_derivative == min(second_derivative)) + 1
+
+# Display the optimal value of K
+cat("The optimal value of K determined by the Elbow method is:", optimal_k, "\n")
+```
+<p style='color:#000;'> The curve between k = 1 and k = 2 is steeper compared to later points, which indicates that adding more neighbors beyond k = 2 results in smaller gains in terms of average distance reduction.</p>
+
+<p style='color:#000;'>**K-Nearest Neighbors (KNN) Outlier Detection** is a non-parametric method that identifies outliers by measuring distances between a data point and its neighbors. With **KNN**, a data point is considered an outlier if it is far from its **K** nearest neighbors. Using the elbow method, we have determined the optimal value for **K** that balances precision and computational efficiency. This approach is particularly useful for identifying localized anomalies within the data, which may not be detected by simpler statistical approaches. Below, we apply the KNN algorithm to identify outliers using the optimal **K** value we previously derived.</p>
+
+```{r}
+# Load necessary libraries
+library(FNN)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Use the optimal K value determined by the Elbow method
+k <- optimal_k
+
+# Step 1: Apply KNN to find distances to the K-nearest neighbors
+knn_result <- get.knnx(data = scaled_data, query = scaled_data, k = k + 1)  # k + 1 because the nearest neighbor will include the point itself
+
+# Step 2: Extract distances to the K-nearest neighbors (excluding the point itself)
+knn_distances <- knn_result$nn.dist[, 2:(k + 1)]
+
+# Step 3: Calculate the average distance to K-nearest neighbors for each point
+average_knn_distances <- rowMeans(knn_distances)
+
+# Step 4: Determine a threshold for outlier detection
+# We'll use the 95th percentile as a threshold for identifying outliers
+threshold <- quantile(average_knn_distances, 0.95)
+
+# Step 5: Identify outliers based on the threshold
+outliers <- average_knn_distances > threshold
+
+# Step 6: Create a summary table of the results using the `id` column from stroke_data_transformed
+knn_outlier_summary <- data.frame(
+  ID = stroke_data_transformed$id,
+  Average_Distance = average_knn_distances,
+  Is_Outlier = ifelse(outliers, "Yes", "No")
+)
+
+# Display the summary table using knitr and kableExtra
+kable(head(knn_outlier_summary, 10), "html", caption = "KNN Outlier Detection Summary (First 10 Points)") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  column_spec(1, bold = TRUE)
+
+# Count the number of outliers
+num_outliers <- sum(outliers)
+cat("The number of outliers detected by KNN with k =", k, "is:", num_outliers, "\n")
+
+
+```
+```{r}
+# Calculate the total number of observations
+total_observations <- nrow(scaled_data)
+
+# Calculate the count of outliers and normal points from knn_outlier_summary
+outlier_count <- knn_outlier_summary %>% filter(Is_Outlier == "Yes") %>% nrow()
+normal_count <- knn_outlier_summary %>% filter(Is_Outlier == "No") %>% nrow()
+
+# Calculate the percentages of outliers and normal points
+outlier_percentage <- round((outlier_count / total_observations) * 100, 2)
+normal_percentage <- round((normal_count / total_observations) * 100, 2)
+
+# Print a summary paragraph using cat() with calculated values
+cat(
+  "The KNN-based outlier detection results reveal that out of the total ", total_observations,
+  " observations, ", outlier_count, " (approximately ", outlier_percentage, "%) were classified as Outliers, while ",
+  normal_count, " (approximately ", normal_percentage, "%) were deemed Normal. This outlier identification is based on the average distance between each point and its k-nearest neighbors, where those with unusually high distances were flagged as outliers. Identifying these outliers is crucial, as they represent data points that differ significantly from the majority and could potentially introduce noise or bias during modeling.",
+  sep = ""
+)
+
+```
+<p style='color:#000;'>**Local Outlier Factor (LOF)** is an unsupervised outlier detection algorithm that determines the outlierness of a data point based on its local density. It compares the density of each point with that of its neighbors to detect regions where the data points have a significantly lower density than their neighbors. This means that LOF can effectively identify outliers that reside in regions with different densities, making it particularly useful for datasets with varying density distributions. Below, we apply the LOF method on our scaled dataset to identify potential outliers and evaluate how many data points are flagged as outliers.</p>
+
+<p style='color:#000;'>**Elbow Method for Optimal `k` Selection** is a technique used to determine the best number of neighbors (`k`) in both KNN and LOF outlier detection algorithms. The method is applied differently in each case due to the unique characteristics of these algorithms. For KNN, the Elbow method aims to identify the point where the average distance to neighbors stabilizes, indicating diminishing returns from increasing `k`. This helps balance neighborhood information without adding unnecessary complexity. In contrast, for LOF, the Elbow method helps measure how isolated each point is in comparison to its neighbors. The curve drops sharply and then flattens, indicating the point where increasing `k` leads to stable outlier detection by capturing consistent density deviations. While both methods use the Elbow approach, KNN focuses on reducing average distances, whereas LOF aims to capture stable density differences for effective anomaly detection. Below, the Elbow method is applied to both algorithms to determine their respective optimal `k` values.</p>
+
+```{r}
+# Load necessary libraries
+library(dbscan)
+library(dplyr)
+library(plotly)
+
+# Function to calculate average LOF scores for different values of k
+calculate_average_lof <- function(data, max_k) {
+  avg_lof_scores <- numeric(max_k)
+  
+  for (k in 1:max_k) {
+    lof_scores <- lof(data, k = k)
+    avg_lof_scores[k] <- mean(lof_scores)
+  }
+  
+  avg_lof_scores
+}
+
+# Determine optimal K for LOF using an analysis similar to the Elbow method
+set.seed(123)  # For reproducibility
+max_k_lof <- 20
+avg_lof_scores <- calculate_average_lof(scaled_data, max_k_lof)
+
+# Plot the average LOF scores to identify an optimal K
+lof_elbow_plot <- plot_ly(x = 1:max_k_lof, y = avg_lof_scores, type = 'scatter', mode = 'lines+markers',
+                          line = list(color = 'red'), marker = list(size = 8)) %>%
+  layout(
+    title = 'Elbow Method for Optimal K in LOF',
+    xaxis = list(title = 'Number of Neighbors (K)'),
+    yaxis = list(title = 'Average LOF Score'),
+    showlegend = FALSE
+  )
+
+# Display the interactive elbow plot
+lof_elbow_plot
+
+
+```
+
+```{r}
+# Manually determine the optimal value of K based on the elbow plot
+optimal_k_lof <- 4
+
+# Display the optimal value of K
+cat("The optimal value of K for LOF determined by the Elbow method is:", optimal_k_lof, "\n")
+```
+```{r}
+# Load necessary libraries
+library(dbscan)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Step 1: Calculate LOF scores using the optimal k value determined by the elbow method
+lof_scores <- lof(scaled_data, k = optimal_k_lof)
+
+# Step 2: Set a threshold for determining outliers
+# We'll use the 95th percentile of LOF scores as a threshold for identifying outliers
+lof_threshold <- quantile(lof_scores, 0.95)
+
+# Step 3: Identify outliers based on the threshold
+lof_outliers <- lof_scores > lof_threshold
+
+# Step 4: Create a summary table with the results using the `id` column from stroke_data_transformed
+lof_outlier_summary <- data.frame(
+  ID = stroke_data_transformed$id,
+  LOF_Score = lof_scores,
+  Is_Outlier = ifelse(lof_outliers, "Yes", "No")
+)
+
+# Display the summary table using knitr and kableExtra
+kable(head(lof_outlier_summary, 10), "html", caption = "LOF Outlier Detection Summary (First 10 Points)") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  column_spec(1, bold = TRUE)
+
+# Step 5: Calculate and Print a Summary of Outliers
+# Calculate the count of outliers and normal points
+total_observations <- nrow(scaled_data)
+lof_outlier_count <- lof_outlier_summary %>% filter(Is_Outlier == "Yes") %>% nrow()
+lof_normal_count <- lof_outlier_summary %>% filter(Is_Outlier == "No") %>% nrow()
+
+# Calculate the percentages of outliers and normal points
+lof_outlier_percentage <- round((lof_outlier_count / total_observations) * 100, 2)
+lof_normal_percentage <- round((lof_normal_count / total_observations) * 100, 2)
+
+# Print a summary paragraph using cat() with calculated values, including the chosen k
+cat(
+  "The Local Outlier Factor (LOF) analysis with k =", optimal_k_lof,
+  " reveals that out of the total ", total_observations,
+  " observations, ", lof_outlier_count, " (approximately ", lof_outlier_percentage, "%) were classified as Outliers, while ",
+  lof_normal_count, " (approximately ", lof_normal_percentage, "%) were deemed Normal. ",
+  "LOF identifies outliers by comparing the local density of each point with that of its neighbors. ",
+  "Points with significantly lower local density than their neighbors are flagged as outliers, making LOF especially useful in identifying anomalies in datasets with varying density distributions.",
+  sep = ""
+)
+```
+
+
+<p style='color:#000;'>**Isolation Forest** is an unsupervised learning algorithm used for anomaly detection, based on the principle of isolating observations. The algorithm works by randomly partitioning the data, isolating outliers more quickly than the majority of normal observations. Its advantage lies in its efficiency in handling high-dimensional datasets and its ability to effectively identify anomalies that significantly deviate from the rest of the data. Below, we implement Isolation Forest to detect potential outliers in our scaled dataset, continuing the outlier detection process alongside the other methods used previously.</p>
+
+```{r}
+# Load necessary libraries
+library(isotree)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Step 1: Train the Isolation Forest model
+# Train the model on the scaled dataset to detect potential anomalies
+set.seed(123)  # Set seed for reproducibility
+iso_forest_model <- isolation.forest(scaled_data, ntrees = 100, sample_size = 256, seed = 123)
+
+# Step 2: Predict anomaly scores using the trained model
+# Higher scores indicate more anomalous observations
+anomaly_scores <- predict(iso_forest_model, scaled_data, type = "score")
+
+# Step 3: Set a threshold for determining outliers
+# We'll use the 95th percentile of anomaly scores as a threshold for identifying outliers
+iso_forest_threshold <- quantile(anomaly_scores, 0.95)
+
+# Step 4: Identify outliers based on the threshold
+iso_forest_outliers <- anomaly_scores > iso_forest_threshold
+
+# Step 5: Create a summary table with the results using the `id` column from stroke_data_transformed
+iso_forest_outlier_summary <- data.frame(
+  ID = stroke_data_transformed$id,
+  Anomaly_Score = anomaly_scores,
+  Is_Outlier = ifelse(iso_forest_outliers, "Yes", "No")
+)
+
+# Display the summary table using knitr and kableExtra
+kable(head(iso_forest_outlier_summary, 10), "html", caption = "Isolation Forest Outlier Detection Summary (First 10 Points)") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray")) %>%
+  column_spec(1, bold = TRUE)
+
+# Step 6: Calculate and Print a Summary of Outliers
+# Calculate the count of outliers and normal points
+total_observations <- nrow(scaled_data)
+iso_forest_outlier_count <- iso_forest_outlier_summary %>% filter(Is_Outlier == "Yes") %>% nrow()
+iso_forest_normal_count <- iso_forest_outlier_summary %>% filter(Is_Outlier == "No") %>% nrow()
+
+# Calculate the percentages of outliers and normal points
+iso_forest_outlier_percentage <- round((iso_forest_outlier_count / total_observations) * 100, 2)
+iso_forest_normal_percentage <- round((iso_forest_normal_count / total_observations) * 100, 2)
+
+# Print a summary paragraph using cat() with calculated values
+cat(
+  "The Isolation Forest analysis reveals that out of the total ", total_observations,
+  " observations, ", iso_forest_outlier_count, " (approximately ", iso_forest_outlier_percentage, "%) were classified as Outliers, while ",
+  iso_forest_normal_count, " (approximately ", iso_forest_normal_percentage, "%) were deemed Normal. ",
+  "The Isolation Forest method isolates anomalies by partitioning data points using random splits, making it effective for identifying outliers that are isolated within the feature space. ",
+  "The higher the anomaly score, the more likely the point is to be an outlier.",
+  sep = ""
+)
+```
+
+<p style='color:#000;'>With multiple methods utilized for outlier detection, several strategies are available for managing them: <b>removal, imputation, winsorization, or retention for further investigation</b>. Each approach offers distinct advantages depending on the analysis's objectives:</p>
+
+<ul>
+<li><b>Removing Outliers</b>: This approach is suitable if it is believed that the outliers do not contain valuable information and may introduce noise into predictive modeling.</li>
+<li><b>Imputing Outliers</b>: If retaining all data points is essential, imputation methods (such as using median values or KNN imputation) provide a means to "normalize" the data while preserving all observations.</li>
+<li><b>Winsorizing Outliers</b>: This method caps extreme values within a defined threshold, thereby reducing their influence without removing them from the dataset.</li>
+<li><b>Retaining Outliers for Further Analysis</b>: In certain contexts, such as fraud detection, outliers may represent significant anomalies that warrant additional exploration.</li>
+</ul>
+
+<p style='color:#000;'>In this analysis, the decision was made to proceed with <b>removing the outliers detected by all three methods (KNN, LOF, and Isolation Forest)</b> rather than relying on boxplot-based detection. This choice was motivated by the observation that the <b>boxplot approach identified a higher percentage of outliers (12.27% in the Avg Glucose Level column)</b> compared to the more consistent and conservative algorithmic methods. By selecting outliers detected by all three methods, only the most consistently flagged extreme values are removed, effectively reducing noise without discarding potentially valuable data points. This more refined approach helps maintain data quality and enhances model performance.</p>
+
+<p style='color:#000;'>The resulting dataset now includes only those observations classified as "normal" by all three outlier detection methods. This ensures that the dataset is largely devoid of extreme and potentially noisy values, thereby enhancing its quality for subsequent analysis and modeling.</p>
+
+<p style='color:#000;'>The summary table below presents the number of data points identified as outliers by one, two, or all three methods (KNN, LOF, and Isolation Forest). For this analysis, outliers detected by all three methods will be removed. This decision is based on the consistent and conservative identification of outliers by these methods, as opposed to the boxplot approach, which detected a larger percentage of outliers (e.g., <b>12.27%</b> in the Avg Glucose Level column). By removing only high-confidence outliers, the goal is to minimize noise while preserving potentially valuable data points.</p>
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+
+# Add the combined outlier flag to count the number of methods that marked each point as an outlier
+scaled_data <- stroke_data_transformed %>%
+  select(id, all_of(numerical_columns)) %>%
+  left_join(knn_outlier_summary %>% select(ID, Is_Outlier), by = c("id" = "ID")) %>%
+  rename(knn_outlier_flag = Is_Outlier) %>%
+  mutate(knn_outlier_flag = ifelse(knn_outlier_flag == "Yes", 1, 0)) %>%
+  left_join(lof_outlier_summary %>% select(ID, Is_Outlier), by = c("id" = "ID")) %>%
+  rename(lof_outlier_flag = Is_Outlier) %>%
+  mutate(lof_outlier_flag = ifelse(lof_outlier_flag == "Yes", 1, 0)) %>%
+  left_join(iso_forest_outlier_summary %>% select(ID, Is_Outlier), by = c("id" = "ID")) %>%
+  rename(iso_outlier_flag = Is_Outlier) %>%
+  mutate(iso_outlier_flag = ifelse(iso_outlier_flag == "Yes", 1, 0)) %>%
+  mutate(combined_outlier_flag = knn_outlier_flag + lof_outlier_flag + iso_outlier_flag)
+
+# Update the summary for specific method combinations
+outlier_summary <- scaled_data %>%
+  count(combined_outlier_flag) %>%
+  mutate(Method_Count = case_when(
+    combined_outlier_flag == 0 ~ "None",
+    combined_outlier_flag == 1 ~ "One Method",
+    combined_outlier_flag == 2 ~ "Two Methods",
+    combined_outlier_flag == 3 ~ "All Three Methods"
+  ))
+
+# Create an aesthetic summary table using the gt package
+library(gt)
+
+outlier_summary_table <- outlier_summary %>%
+  select(Method_Count, n) %>%
+  gt() %>%
+  tab_header(
+    title = "Outlier Detection Summary",
+    subtitle = "Number of Data Points Identified as Outliers by Specific Method Combinations"
+  ) %>%
+  cols_label(
+    Method_Count = "Outlier Detection by",
+    n = "Number of Data Points"
+  ) %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold"),
+      cell_text(align = "left")
+    ),
+    locations = cells_body(columns = vars(Method_Count))
+  ) %>%
+  cols_align(
+    align = "left",
+    columns = vars(Method_Count, n)
+  ) %>%
+  tab_options(
+    table.border.top.color = "darkgray",
+    table.border.bottom.color = "darkgray",
+    table_body.border.bottom.color = "gray",
+    column_labels.border.top.color = "darkgray",
+    column_labels.border.bottom.color = "darkgray",
+    table.font.size = 12,
+    heading.title.font.size = 16,
+    heading.subtitle.font.size = 12
+  )
+
+# Display the summary table
+outlier_summary_table
+
+```
+
+```{r}
+# Remove the rows marked as outliers by all three methods from the stroke_data_transformed dataset
+stroke_data_transformed <- stroke_data_transformed %>%
+  filter(!id %in% (scaled_data %>% filter(combined_outlier_flag == 3) %>% pull(id)))
+
+# Display the cleaned dataset
+kable(head(stroke_data_transformed, 10), "html", caption = "Cleaned Dataset After Removing Outliers (First 10 Observations)") %>%
+  kable_styling(full_width = F, bootstrap_options = c("striped", "hover", "condensed", "rose", "gray"))
+```
+
+
+<p style='color:#000;'>With the removal of the outliers identified by all three methods (KNN, LOF, and Isolation Forest), we have a cleaner dataset, largely free of extreme values. This reduction aims to mitigate the influence of data points that could potentially introduce noise or skew results during modeling. Now, we will re-evaluate the density plots to observe how the distributions of the numerical features have changed post-outlier removal. This comparison helps us understand the impact of our preprocessing steps and ensures that the dataset is well-suited for subsequent analysis.</p>
+
+```{r}
+# Load necessary libraries for visualization
+library(ggplot2)
+library(plotly)
+library(RColorBrewer)
+library(tidyr)
+
+# Numerical columns for comparison
+numerical_columns <- c("age", "avg_glucose_level", "bmi")
+
+# Combine original and transformed datasets, and add Dataset labels
+stroke_data_original$Dataset <- "Original"
+stroke_data_transformed$Dataset <- "Transformed"
+combined_data <- bind_rows(
+  stroke_data_original %>% select(all_of(numerical_columns), Dataset),
+  stroke_data_transformed %>% select(all_of(numerical_columns), Dataset)
+)
+
+# Replace labels for better readability
+combined_data <- combined_data %>%
+  pivot_longer(cols = -Dataset, names_to = "Variable", values_to = "Value") %>%
+  mutate(Variable = recode(Variable,
+                           "age" = "Age",
+                           "avg_glucose_level" = "Avg Glucose Level",
+                           "bmi" = "BMI"))
+
+# Define the colors using the Set1 palette
+colors <- brewer.pal(n = 2, name = "Set1")
+names(colors) <- c("Original", "Transformed")
+
+# Create a density plot for visualizing the distributions
+density_plots <- ggplot(combined_data, aes(x = Value, fill = Dataset)) +
+  geom_density(alpha = 0.7) +
+  facet_grid(Variable ~ Dataset, scales = "free") +
+  scale_fill_manual(values = colors) +
+  theme_minimal() +
+  theme(
+    strip.background = element_rect(fill = "lightblue", colour = "deepskyblue", size = 1),
+    strip.text.x = element_text(size = 10, color = "navy", face = "plain"),
+    strip.text.y = element_text(size = 10, color = "navy", face = "plain"),
+    plot.title = element_text(size = 12, face = "plain", hjust = 0.5, margin = margin(t = 10, b = 10)),
+    axis.text = element_text(size = 8),
+    axis.title.y = element_text(size = 10, face = "plain", vjust = 2, angle = 90),
+    legend.position = "none",
+    plot.margin = margin(10, 10, 10, 10),
+    panel.border = element_blank()  
+  ) +
+  labs(title = "Density Distributions of Numerical Variables: Original vs Transformed",
+       x = NULL,
+       y = "Density") +
+  scale_y_continuous(labels = scales::label_number(scale = 1, accuracy = 0.01))
+
+# Convert to an interactive plotly object
+interactive_plot <- ggplotly(density_plots)
+
+# Display the interactive plot
+interactive_plot
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+
+# Generate summary statistics for the numerical variables in both original and transformed datasets
+original_summary <- stroke_data_original %>%
+  summarise(across(all_of(numerical_columns), list(min = ~min(., na.rm = TRUE), 
+                                                   median = ~median(., na.rm = TRUE), 
+                                                   mean = ~mean(., na.rm = TRUE), 
+                                                   max = ~max(., na.rm = TRUE), 
+                                                   sd = ~sd(., na.rm = TRUE)))) %>%
+  pivot_longer(cols = everything(), 
+               names_to = c("Variable", "Statistic"), 
+               names_pattern = "(.*)_(.*)") %>%
+  mutate(Dataset = "Original")
+
+transformed_summary <- stroke_data_transformed %>%
+  summarise(across(all_of(numerical_columns), list(min = ~min(., na.rm = TRUE), 
+                                                   median = ~median(., na.rm = TRUE), 
+                                                   mean = ~mean(., na.rm = TRUE), 
+                                                   max = ~max(., na.rm = TRUE), 
+                                                   sd = ~sd(., na.rm = TRUE)))) %>%
+  pivot_longer(cols = everything(), 
+               names_to = c("Variable", "Statistic"), 
+               names_pattern = "(.*)_(.*)") %>%
+  mutate(Dataset = "Transformed")
+
+# Combine summaries for comparison
+summary_stats <- bind_rows(original_summary, transformed_summary)
+
+# Correct variable names for readability
+summary_stats <- summary_stats %>%
+  mutate(Variable = case_when(
+    Variable == "age" ~ "Age",
+    Variable == "avg_glucose_level" ~ "Avg Glucose Level",
+    Variable == "bmi" ~ "BMI",
+    TRUE ~ Variable
+  ))
+
+# Filter to include only Age, Avg Glucose Level, and BMI
+summary_stats <- summary_stats %>% 
+  filter(Variable %in% c("Age", "Avg Glucose Level", "BMI"))
+
+# Reshape the data to get a more readable format for comparison
+summary_stats_wide <- summary_stats %>%
+  pivot_wider(names_from = Statistic, values_from = value) %>%
+  arrange(Variable, Dataset) %>%
+  select(Dataset, Variable, min, median, mean, max, sd)
+
+# Display the summary statistics table
+kable(summary_stats_wide, "html", caption = "Summary Statistics for Numerical Variables: Original vs Transformed") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed")) %>%
+  add_header_above(c(" " = 2, "Statistics" = 5))
+```
+
+<p style='color:#000;'>After removing the outliers identified by all three detection methods (KNN, LOF, and Isolation Forest), the updated density plots for each numerical feature show only minor changes compared to the original data. The removal of high-confidence outliers did not significantly alter the overall shape of the distributions, suggesting that the outliers had a limited effect on the central trends of the data.
+
+For instance, the distributions of 'Avg Glucose Level' and 'BMI' remain largely consistent, with only slight adjustments in the tails of the distributions. This indicates that the majority of the data points are well-represented by typical values, and the outliers were not substantially influencing the density curves. 
+
+The stability in the density plots after removing the outliers reinforces the notion that the dataset was already relatively well-distributed, and the identified outliers were isolated extreme cases. This helps ensure that subsequent analysis is based on reliable data without being overly impacted by a small number of extreme values.</p>
+
+<div style="background-color:#b2f7ef; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**Categorical Columns**</div>
+
+<p style='color:#000;'>**Categorical Variables Analysis**: In this section, we focus on analyzing the categorical features of the dataset. The goal is to understand the distribution of categories, identify any imbalances, and evaluate whether there are particular categories that dominate the data. Analyzing categorical variables is crucial for understanding the composition of the dataset and for detecting any potential biases that might affect modeling outcomes. By visualizing these categorical distributions, we gain insights that can guide our data processing steps and future analyses.</p> <p style='color:#000;'>Below, we will explore the distribution of the categorical variables in our dataset using bar charts. These visualizations provide a clear overview of the frequency of each category, allowing us to assess the prevalence of each level across the different features.</p>
+
+```{r}
+# Load necessary libraries for visualization
+library(ggplot2)
+library(plotly)
+library(RColorBrewer)
+library(tidyr)
+
+# Categorical columns for comparison
+categorical_columns <- c("gender", "hypertension", "heart_disease", "ever_married", "work_type", "Residence_type", "smoking_status", "stroke")
+
+# Combine original and transformed datasets, and add Dataset labels
+stroke_data_original$Dataset <- "Original"
+stroke_data_transformed$Dataset <- "Transformed"
+combined_data <- bind_rows(
+  stroke_data_original %>% select(all_of(categorical_columns), Dataset),
+  stroke_data_transformed %>% select(all_of(categorical_columns), Dataset)
+)
+
+# Replace labels for better readability
+combined_data <- combined_data %>%
+  pivot_longer(cols = -Dataset, names_to = "Variable", values_to = "Category") %>%
+  mutate(Variable = recode(Variable,
+                           "gender" = "Gender",
+                           "hypertension" = "Hypertension",
+                           "heart_disease" = "Heart Disease",
+                           "ever_married" = "Ever Married",
+                           "work_type" = "Work Type",
+                           "Residence_type" = "Residence Type",
+                           "smoking_status" = "Smoking Status",
+                           "stroke" = "Stroke"))
+
+# Define the colors using the Set1 palette
+colors <- brewer.pal(n = 2, name = "Set1")
+names(colors) <- c("Original", "Transformed")
+
+# Create bar plots for visualizing the distributions of categorical variables
+bar_plots <- ggplot(combined_data, aes(x = Category, fill = Dataset)) +
+  geom_bar(position = "dodge", alpha = 0.8) +
+  geom_text(stat = "count", aes(label = ..count..), position = position_dodge(width = 0.9), vjust = 2, size = 3, fontface = "bold") +
+  facet_wrap(~ Variable, scales = "free", ncol = 2) +
+  scale_fill_manual(values = colors) +
+  theme_minimal(base_size = 14) +
+  theme(
+    strip.background = element_rect(fill = "lightblue", colour = "deepskyblue", size = 1),
+    strip.text.x = element_text(size = 12, color = "navy", face = "plain"),
+    axis.text.x = element_text(size = 9, angle = 45, hjust = 1, face = "bold", lineheight = 0.8),
+    axis.title.y = element_text(size = 12, face = "plain", vjust = 2, angle = 90),
+    legend.position = "bottom",
+    plot.margin = margin(20, 20, 20, 20),
+    panel.border = element_blank()  
+  ) +
+  labs(title = "Frequency Distributions of Categorical Variables: Original vs Transformed",
+       x = NULL,
+       y = "Count")
+
+# Convert to an interactive plotly object
+interactive_bar_plot <- ggplotly(bar_plots, width = 1000, height = 1500)
+
+# Display the interactive plot
+interactive_bar_plot
+
+
+```
+
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**2.4 Bivariate Analysis**</span>
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**2.5 Feature Interactions**</span>
+
+<span style="background-color:#f3def7; color:black; border-radius:5px; padding: 0.2em 0.5em; display: inline-block;">**2.5 **</span>
+
+
+<br><br><br><br>
